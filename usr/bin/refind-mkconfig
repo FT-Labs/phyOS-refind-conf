@@ -39,6 +39,7 @@ generate_submenuentry() {
 
 generate_osprober() {
     os_icon=$(echo "$1" | tr [:upper:] [:lower:])
+    [[ $os_icon = "windows" ]] && os_icon="win"
     main_entry="\n${main_entry}menuentry \"$1\" {\n"
     [[ ! -z $THEME ]] && main_entry="$main_entry\ticon /EFI/refind/themes/$THEME/icons/os_$os_icon.png \n"
     case "$1" in
