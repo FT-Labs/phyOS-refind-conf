@@ -57,6 +57,7 @@ generate_osprober() {
             loader=$(echo "$main_opt" | cut -d ':' -f 4 | tr "/" " " | awk '{print $NF}')
             initrd=$(echo "$main_opt" | cut -d ':' -f 5 | tr "/" " " | awk '{print $NF}')
             cmdline=$(echo "$main_opt" | cut -d ':' -f 6)
+            main_entry="$main_entry\tvolume $guid\n"
             main_entry="$main_entry\tloader /$loader\n"
             main_entry="$main_entry\tinitrd /$initrd\n"
             main_entry="$main_entry\toptions \"$cmdline\" $ucode\n"
