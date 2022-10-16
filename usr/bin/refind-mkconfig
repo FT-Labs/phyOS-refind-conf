@@ -61,6 +61,7 @@ generate_osprober() {
             main_entry="$main_entry\toptions \"$cmdline\" $ucode\n"
             OLD_IFS=$IFS; IFS=$'\n'
             for main_opt in $opts; do
+                echo $main_opt
                 entry=$(echo "$main_opt" | cut -d ':' -f 3)
                 loader=$(echo "$main_opt" | cut -d ':' -f 4 | tr "/" " " | awk '{print $NF}')
                 initrd=$(echo "$main_opt" | cut -d ':' -f 5 | tr "/" " " | awk '{print $NF}')
@@ -104,14 +105,15 @@ if [[ $OS_PROBER = "true" ]]; then
         generate_osprober $os_name $os_root
     done
 fi
-[[ ! -z "$THEME" ]] && main_entry="$main_entry\ninclude themes/$THEME/theme.conf"
 echo -e "$main_entry" | sudo tee /boot/efi/EFI/refind/refind_entries.conf
 sudo cp -f /etc/refind.d/refind.conf /boot/efi/EFI/refind/refind.conf
+[[ ! -z "$THEME" ]] && echo "include themes/$THEME/theme.conf" | sudo tee -a /boot/efi/EFI/refind/refind.conf
 
 is_grub=$(sudo find /boot -name "grub.cfg")
 
 if [[ ! -z $is_grub ]]; then
-    delete=$(gum choose --placeholder "Old grub files detected. Want to remove?" "Yes" "No")
+    echo "Old grub files detected. Want to remove?"
+    delete=$(gum choose "Yes" "No")
     if [[ $delete = "Yes" ]]; then
         OLD_IFS=$IFS; IFS=$'\n'
         for f in $is_grub; do
