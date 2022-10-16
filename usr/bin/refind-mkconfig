@@ -1,0 +1,50 @@
+#!/bin/bash
+
+source /etc/default/refind || exit 1
+
+ucode='\\amd-ucode.img'
+
+generate_menuentry() {
+    main_entry="\n${main_entry}menuentry \"$1\" {\n"
+    main_entry="$main_entry\ticon /EFI/refind/icons/os_phyos.png \n"
+    main_entry="$main_entry\tvolume $guid\n"
+    main_entry="$main_entry\tostype Linux\n"
+    main_entry="$main_entry\tloader /vmlinuz-$DEFAULT_KERNEL\n"
+    main_entry="$main_entry\tinitrd /initramfs-$DEFAULT_KERNEL.img\n"
+    main_entry="$main_entry\toptions \"root=$root $REFIND_CMDLINE_LINUX $REFIND_CMDLINE_LINUX_DEFAULT\" initrd=$ucode\n"
+    main_entry="$main_entry\tsubmenuentry \"Boot using safe graphics\" {\n"
+    main_entry="$main_entry\t  initrd /initramfs-$DEFAULT_KERNEL-safegraphics.img\n"
+    main_entry="$main_entry\t  options \"root=$root rw add_efi_memmap $REFIND_CMDLINE_LINUX_DEFAULT\"\n\t}\n"
+}
+
+generate_submenuentry() {
+    sub_entry="$sub_entry\tsubmenuentry \"$1\" {\n"
+    sub_entry="$sub_entry\t  loader /vmlinuz-$1\n"
+    sub_entry="$sub_entry\t  initrd /initramfs-$1.img\n"
+    sub_entry="$sub_entry\t  options \"root=$root rw add_efi_memmap $REFIND_CMDLINE_LINUX $REFIND_CMDLINE_LINUX_DEFAULT\" initrd=$ucode\n\t}"
+    printf "%s" "$sub_entry\n"
+}
+
+
+dev=$(mount | grep "/boot " | awk '{print $1}')
+root=$(mount | grep -w '/' | awk '{print $1}' | rev | cut -d '/' -f 1 | rev)
+is_lvm=$(sudo lvs -o lv_name | awk '{if(NR>1)print}' | tr -d " " | while read lv; do findmnt -l | grep '/dev/\S\+' | awk '{print $2}' | grep $lv; done)
+
+if [[ -z $dev ]]; then
+    [[ $(echo "$is_lvm" | grep "$root") ]] && \
+        guid=$(sudo dmsetup deps -o devname | grep $root | awk '{print $NF}' | tr -d "()" | sudo xargs dmsetup deps -o devname | awk '{print "/dev/"$NF}' | tr -d "()" | sudo xargs lsblk -o partuuid | awk 'IF NR>1 {print}') ||
+        guid=$(sudo dmsetup deps -o devname | grep "$root" | awk '{print "/dev/"$NF}' | tr -d "()" | sudo xargs lsblk -o partuuid | awk 'IF NR>1 {print}')
+else
+    guid=$(sudo lsblk -o partuuid $dev | awk 'IF NR>1 {print}')
+fi
+[[ ! -z $is_lvm ]] && root="/dev/mapper/$root" || root="/dev/$root"
+
+generate_menuentry "$OS_DISTRIBUTOR"
+sub=$(ls /boot | grep "vmlinuz-linux\|vmlinuz-linux-zen\|vmlinuz-linux-hardened\|vmlinuz-linux-lts" | cut -d "-" -f 2- | while read k; do
+    [[ $k != $DEFAULT_KERNEL ]] && generate_submenuentry $k
+done)
+generate_menuentry "Ubuntu"
+sub=$(ls /boot | grep "vmlinuz-*-generic" | cut -d "-" -f 2- | while read k; do
+    [[ $k != $DEFAULT_KERNEL ]] && generate_submenuentry $k
+done)
+echo -e "$main_entry$sub}" #| sudo tee /boot/efi/EFI/refind/refind_entries.conf
