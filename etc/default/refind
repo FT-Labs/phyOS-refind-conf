@@ -3,5 +3,5 @@ REFIND_CMDLINE_LINUX="quiet splash loglevel=3 udev.log-priority=3 vt.global_curs
 REFIND_CMDLINE_LINUX_DEFAULT=""
 CHECK_UCODE="true"
 OS_PROBER="true"
-DEFAULT_KERNEL="linux-zen"
-THEME="rEFInd-minimal"
+DEFAULT_KERNEL=""
+THEME=""
