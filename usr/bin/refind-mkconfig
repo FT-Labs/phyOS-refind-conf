@@ -49,7 +49,7 @@ generate_osprober() {
         ;;
         *)
             main_entry="$main_entry\tostype Linux\n"
-            opts=$(sudo linux-boot-prober "$2")
+            opts=$(sudo linux-boot-prober "$2" | grep -v "vmlinuz-linux\|vmlinuz-linux-zen\|vmlinuz-linux-hardened\|vmlinuz-linux-lts")
             main_opt=$(echo "$opts" | head -1)
             opts=$(echo "$opts" | awk 'IF NR>1 {print}')
             dev=$(echo "$main_opt" | cut -d ':' -f 2)
@@ -110,16 +110,3 @@ fi
 echo -e "$main_entry" | sudo tee /boot/efi/EFI/refind/refind_entries.conf
 sudo cp -f /etc/refind.d/refind.conf /boot/efi/EFI/refind/refind.conf
 [[ ! -z "$THEME" ]] && echo "include themes/$THEME/theme.conf" | sudo tee -a /boot/efi/EFI/refind/refind.conf
-
-is_grub=$(sudo find /boot -name "grub.cfg")
-
-if [[ ! -z $is_grub ]]; then
-    echo "Old grub files detected. Want to remove?"
-    delete=$(gum choose "Yes" "No")
-    if [[ $delete = "Yes" ]]; then
-        OLD_IFS=$IFS; IFS=$'\n'
-        for f in $is_grub; do
-            sudo rm -r "$(dirname $f)"
-        done
-    fi
-fi
