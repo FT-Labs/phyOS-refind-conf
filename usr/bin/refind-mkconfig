@@ -23,7 +23,7 @@ generate_menuentry() {
     main_entry="$main_entry\tostype Linux\n"
     main_entry="$main_entry\tloader /vmlinuz-$DEFAULT_KERNEL\n"
     main_entry="$main_entry\tinitrd /initramfs-$DEFAULT_KERNEL.img\n"
-    main_entry="$main_entry\toptions \"root=$root $REFIND_CMDLINE_LINUX $REFIND_CMDLINE_LINUX_DEFAULT\" $ucode\n"
+    main_entry="$main_entry\toptions \"root=$root $REFIND_CMDLINE_LINUX $REFIND_CMDLINE_LINUX_DEFAULT $ucode\"\n"
     main_entry="$main_entry\tsubmenuentry \"Boot using safe graphics\" {\n"
     main_entry="$main_entry\t\tinitrd /initramfs-$DEFAULT_KERNEL-safegraphics.img\n"
     main_entry="$main_entry\t\toptions \"root=$root rw add_efi_memmap $REFIND_CMDLINE_LINUX_DEFAULT\"\n\t}\n"
@@ -33,7 +33,7 @@ generate_submenuentry() {
     sub_entry="$sub_entry\tsubmenuentry \"$1\" {\n"
     sub_entry="$sub_entry\t  loader /vmlinuz-$1\n"
     sub_entry="$sub_entry\t  initrd /initramfs-$1.img\n"
-    sub_entry="$sub_entry\t  options \"root=$root rw add_efi_memmap $REFIND_CMDLINE_LINUX $REFIND_CMDLINE_LINUX_DEFAULT\" $ucode\n\t}"
+    sub_entry="$sub_entry\t  options \"root=$root rw add_efi_memmap $REFIND_CMDLINE_LINUX $REFIND_CMDLINE_LINUX_DEFAULT $ucode\" \n\t}"
     printf "%s" "$sub_entry\n"
 }
 
@@ -60,7 +60,7 @@ generate_osprober() {
             main_entry="$main_entry\tvolume $guid\n"
             main_entry="$main_entry\tloader /$loader\n"
             main_entry="$main_entry\tinitrd /$initrd\n"
-            main_entry="$main_entry\toptions \"$cmdline\" $ucode\n"
+            main_entry="$main_entry\toptions \"$cmdline $ucode\"\n"
             OLD_IFS=$IFS; IFS=$'\n'
             for main_opt in $opts; do
                 echo $main_opt
@@ -71,7 +71,7 @@ generate_osprober() {
                 main_entry="$main_entry\tsubmenuentry \"$entry\" {\n"
                 main_entry="$main_entry\t\tloader /$loader\n"
                 main_entry="$main_entry\t\tinitrd /$initrd\n"
-                main_entry="$main_entry\t\toptions \"$cmdline\" $ucode\n\t}\n"
+                main_entry="$main_entry\t\toptions \"$cmdline $ucode\"\n\t}\n"
             done
             IFS=$OLD_IFS
             main_entry="$main_entry}\n"
